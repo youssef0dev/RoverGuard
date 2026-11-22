@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+
+<robot name="avoidance_obstacle">
+    <link name="box_obstacle">
+        <inertial>
+            <origin xyz="0 0 0.125" rpy="0 0 0"/>
+            <mass value="1.0"/>
+            <inertia
+                ixx="0.007908"
+                ixy="0"
+                ixz="0"
+                iyy="0.007908"
+                iyz="0"
+                izz="0.005400"/>
+        </inertial>
+
+        <visual>
+            <origin xyz="0 0 0.125" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.18 0.18 0.25"/>
+            </geometry>
+            <material name="orange">
+                <color rgba="1 0.3 0.05 1"/>
+            </material>
+        </visual>
+
+        <collision>
+            <origin xyz="0 0 0.125" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.18 0.18 0.25"/>
+            </geometry>
+        </collision>
+    </link>
+</robot>

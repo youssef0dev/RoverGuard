@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+
+<robot name="obstacle">
+
+    <link name="wall">
+
+        <inertial>
+            <origin xyz="0 0 0.20" rpy="0 0 0"/>
+
+            <mass value="1.0"/>
+
+            <inertia
+                ixx="0.043333"
+                ixy="0"
+                ixz="0"
+                iyy="0.014167"
+                iyz="0"
+                izz="0.030833"/>
+        </inertial>
+
+        <visual>
+            <origin xyz="0 0 0.20" rpy="0 0 0"/>
+
+            <geometry>
+                <box size="0.10 0.60 0.40"/>
+            </geometry>
+
+            <material name="orange">
+                <color rgba="1 0.35 0.05 1"/>
+            </material>
+        </visual>
+
+        <collision>
+            <origin xyz="0 0 0.20" rpy="0 0 0"/>
+
+            <geometry>
+                <box size="0.10 0.60 0.40"/>
+            </geometry>
+        </collision>
+
+    </link>
+
+</robot>
