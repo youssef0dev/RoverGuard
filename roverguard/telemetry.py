@@ -1,4 +1,4 @@
-import csv
+﻿import csv
 from datetime import datetime
 from pathlib import Path
 
@@ -24,7 +24,7 @@ class TelemetryLogger:
     def __init__(self, directory: Path):
         directory.mkdir(parents=True, exist_ok=True)
         stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.path = directory / f"mission_v02_{stamp}.csv"
+        self.path = directory / f"mission_v03_{stamp}.csv"
         self._file = self.path.open("w", newline="", encoding="utf-8")
         self._writer = csv.DictWriter(self._file, fieldnames=self.FIELDNAMES)
         self._writer.writeheader()
@@ -71,4 +71,5 @@ class TelemetryLogger:
 
     def __exit__(self, *_args) -> None:
         self.close()
+
 

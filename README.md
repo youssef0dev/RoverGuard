@@ -1,8 +1,8 @@
-# RoverGuard v0.2
+# RoverGuard v0.3
 
-Wheeled differential-drive robot: PyBullet simulation, A* navigation,
-independent safety, odometry, telemetry, tests, and a hardware-neutral C++
-firmware core.
+Safe local-LLM mission planning for a wheeled differential-drive inspection
+robot: PyBullet simulation, A* navigation, independent safety, odometry,
+telemetry, tests, and a hardware-neutral C++ firmware core.
 
 ## Chno kaydir daba?
 
@@ -13,6 +13,40 @@ firmware core.
 5. Safety supervisor y9der yn9es speed wla yw9ef robot.
 6. Mission katmchi `P1 -> P2 -> P3 -> BASE`.
 7. Telemetry kattsjel f `logs/`.
+8. Local LLM kay7awwel Darija/English/French l strict mission JSON.
+9. Deterministic validator kayrefed waypoint wla speed ma-amnach.
+
+## Cognitive local-LLM demo
+
+Requirements:
+
+- Ollama running locally;
+- installed model `qwen3.5:4b-q4_K_M`.
+
+Plan and validate without opening PyBullet:
+
+```powershell
+python run_cognitive_demo.py `
+  --command "Inspect P1 and P3, then return to base" `
+  --plan-only
+```
+
+Run the approved mission in PyBullet:
+
+```powershell
+python run_cognitive_demo.py `
+  --command "Inspect P1 and P3, then return to base"
+```
+
+Interactive mode:
+
+```powershell
+python run_cognitive_demo.py
+```
+
+The LLM never controls wheels or motors. It can only propose configured
+waypoint names and a bounded speed. Read
+[docs/AI_ARCHITECTURE.md](docs/AI_ARCHITECTURE.md).
 
 ## Installation (Windows PowerShell)
 
@@ -69,10 +103,11 @@ MISSION SUCCESS: P1 -> P2 -> P3 -> BASE
 ## Project structure
 
 ```text
-roverguard/       Python core: math, planning, safety, simulation
+roverguard/       Python core: math, planning, safety, simulation, AI boundary
 robot/            URDF dyal robot
 world/            URDF dyal obstacles
 tests/            automatic unit tests
+examples/         reproducible natural-language mission prompts
 firmware/         hardware-neutral C++ controller/HAL
 docs/             architecture w Sim-to-Real explanations
 legacy/v0_1/      learning scripts l9dam (reference fa9at)

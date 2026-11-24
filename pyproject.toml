@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "roverguard"
-version = "0.2.1"
-description = "Differential-drive navigation from PyBullet to embedded C++"
+version = "0.3.0"
+description = "Safe local-LLM missions for a differential-drive inspection robot"
 requires-python = ">=3.11"
 dependencies = ["pybullet==3.2.7"]
 

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.0
+
+- Added a local Ollama natural-language mission planner.
+- Added JSON Schema structured output for AI missions.
+- Added an independent deterministic mission validator.
+- AI can only select configured waypoints and a bounded speed.
+- Added dynamic waypoint routes to the existing PyBullet simulation.
+- Added traceable JSON audit logs for approved AI missions.
+- Added nine pure unit tests for schema, provider, and AI safety boundaries.
+- Added `run_cognitive_demo.py` and AI architecture documentation.
+
 ## 0.2.1
 
 - Fixed a path-follower deadlock at intermediate A* corners.

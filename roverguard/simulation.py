@@ -1,7 +1,8 @@
-import argparse
+﻿import argparse
 import math
 import random
 import time
+from dataclasses import replace
 from pathlib import Path
 
 from .astar import AStarPlanner, PathNotFoundError, PlannedPath
@@ -36,7 +37,7 @@ def build_grid(config: AppConfig) -> OccupancyGrid:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="RoverGuard v0.2 A* patrol")
+    parser = argparse.ArgumentParser(description="RoverGuard v0.3 safe cognitive patrol")
     parser.add_argument(
         "--headless",
         action="store_true",
@@ -146,7 +147,13 @@ def draw_path(pybullet, path: PlannedPath, previous_ids: list[int]) -> list[int]
     return ids
 
 
-def run(args: argparse.Namespace) -> int:
+def run(
+    args: argparse.Namespace,
+    *,
+    mission_waypoints=None,
+    max_linear_speed_mps: float | None = None,
+    mission_label: str | None = None,
+) -> int:
     try:
         import pybullet as p
         import pybullet_data
@@ -156,6 +163,23 @@ def run(args: argparse.Namespace) -> int:
         ) from error
 
     config = AppConfig()
+    if max_linear_speed_mps is not None:
+        if not 0.0 < max_linear_speed_mps <= config.robot.max_linear_speed_mps:
+            raise ValueError("Mission speed is outside robot safety limits")
+        config = replace(
+            config,
+            robot=replace(
+                config.robot,
+                max_linear_speed_mps=max_linear_speed_mps,
+            ),
+        )
+    active_waypoints = (
+        tuple(mission_waypoints)
+        if mission_waypoints is not None
+        else config.mission.waypoints
+    )
+    if not active_waypoints:
+        raise ValueError("Simulation mission cannot be empty")
     if args.max_seconds is not None:
         max_seconds = args.max_seconds
     else:
@@ -226,7 +250,7 @@ def run(args: argparse.Namespace) -> int:
                 cameraTargetPosition=[0.45, 0.25, 0],
             )
 
-        create_waypoint_markers(p, config.mission.waypoints)
+        create_waypoint_markers(p, active_waypoints)
 
         for _ in range(240):
             p.stepSimulation()
@@ -247,7 +271,7 @@ def run(args: argparse.Namespace) -> int:
             distance_tolerance_m=config.mission.goal_tolerance_m,
         )
         follower = PathFollower(controller)
-        mission = PatrolMission(config.mission.waypoints)
+        mission = PatrolMission(active_waypoints)
         grid = build_grid(config)
         planner = AStarPlanner(grid, config.planner.allow_diagonal)
         safety = SafetySupervisor(
@@ -280,8 +304,11 @@ def run(args: argparse.Namespace) -> int:
         current_pose = odometry.pose
         plan_for_current(current_pose)
 
-        print("\nROVERGUARD v0.2 - A* PATROL")
-        print("Route: P1 -> P2 -> P3 -> BASE")
+        route_text = " -> ".join(name for name, _ in active_waypoints)
+        print("\nROVERGUARD v0.3 - SAFE COGNITIVE PATROL")
+        if mission_label:
+            print("Mission:", mission_label)
+        print("Route:", route_text)
         print("Log:", logger.path)
 
         max_steps = int(max_seconds / config.simulation.time_step_s)
@@ -385,7 +412,7 @@ def run(args: argparse.Namespace) -> int:
                     print(f"\n{reached.name} WSEL")
                     if mission.complete:
                         mission_success = True
-                        print("MISSION SUCCESS: P1 -> P2 -> P3 -> BASE")
+                        print("MISSION SUCCESS:", route_text)
                         event = "MISSION_SUCCESS"
                     else:
                         plan_for_current(current_pose)
@@ -492,4 +519,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
 

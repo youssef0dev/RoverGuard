@@ -8,19 +8,21 @@ jobs:
   python-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
       - name: Compile Python
-        run: python -m compileall -q roverguard tests run_roverguard.py
+        run: >-
+          python -m compileall -q
+          roverguard tests run_roverguard.py run_cognitive_demo.py
       - name: Unit tests
         run: python -m unittest discover -s tests -v
 
   firmware-core:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Compile C++17 firmware core
         run: >-
           g++ -std=c++17 -Wall -Wextra -Wpedantic

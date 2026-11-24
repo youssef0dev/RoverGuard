@@ -1,6 +1,6 @@
 # RoverGuard architecture
 
-## Data flow
+## Deterministic data flow
 
 ```text
 Mission target
@@ -17,6 +17,20 @@ Mission target
 Sensor kaymchi l `SafetySupervisor` b tari9 mosta9il. Ya3ni safety t9der
 tw9ef robot wakha planner/controller 3taw command dyal l9dam.
 
+## Cognitive mission flow (v0.3)
+
+```text
+Darija / English / French command
+    -> local Ollama model
+    -> strict JSON MissionPlan
+    -> deterministic MissionValidator
+    -> configured waypoint names and speed limit
+    -> deterministic data flow above
+```
+
+LLM ma-3ndoch access direct l motors, PyBullet joints, firmware, coordinates,
+wla terminal. Ila output ma-s7i7ch, simulation ma-katbdach.
+
 ## Modules
 
 - `config.py`: ga3 dimensions w thresholds f blassa wa7da.
@@ -28,6 +42,8 @@ tw9ef robot wakha planner/controller 3taw command dyal l9dam.
 - `odometry.py`: kay9ddar pose mn wheel angles.
 - `safety.py`: CLEAR/SLOW/STOP m3a hysteresis.
 - `simulation.py`: PyBullet ghir adapter, machi source dyal core logic.
+- `ai/`: local model adapter, strict mission schema, w safety validation.
+- `cognitive_mission.py`: approved mission audit logs.
 
 ## 3lach had ta9sim mohim?
 
