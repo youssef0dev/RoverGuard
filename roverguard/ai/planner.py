@@ -36,6 +36,7 @@ class CognitiveMissionPlanner:
         schema = mission_json_schema(
             allowed,
             max_speed_mps=self.validator.max_robot_speed_mps,
+            max_waypoints=self.validator.max_mission_waypoints,
         )
         system_prompt = (
             "You are the mission-planning layer of RoverGuard, an autonomous "

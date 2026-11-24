@@ -35,7 +35,7 @@ class OllamaProviderTests(unittest.TestCase):
         with patch(
             "urllib.request.urlopen",
             return_value=FakeHttpResponse(api_payload),
-        ):
+        ) as urlopen:
             result = provider.generate_mission(
                 system_prompt="system",
                 user_command="inspect P1",
@@ -43,6 +43,11 @@ class OllamaProviderTests(unittest.TestCase):
             )
 
         self.assertEqual(result, mission)
+        request = urlopen.call_args.args[0]
+        request_body = json.loads(request.data.decode("utf-8"))
+        self.assertFalse(request_body["think"])
+        self.assertEqual(request_body["keep_alive"], "10m")
+        self.assertEqual(urlopen.call_args.kwargs["timeout"], 300.0)
 
     def test_offline_server_has_clear_boundary_error(self):
         provider = OllamaProvider(model="test-model")

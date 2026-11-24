@@ -1,8 +1,9 @@
-# RoverGuard v0.3
+# RoverGuard v0.4
 
-Safe local-LLM mission planning for a wheeled differential-drive inspection
-robot: PyBullet simulation, A* navigation, independent safety, odometry,
-telemetry, tests, and a hardware-neutral C++ firmware core.
+Data-driven, multi-point local-LLM mission planning for a wheeled
+differential-drive inspection robot: PyBullet simulation, A* navigation,
+independent safety, odometry, telemetry, tests, and a hardware-neutral C++
+firmware core.
 
 ## Chno kaydir daba?
 
@@ -11,10 +12,11 @@ telemetry, tests, and a hardware-neutral C++ firmware core.
 3. A* kay7seb a9sar safe path.
 4. Path follower kaytbe3 points dyal path.
 5. Safety supervisor y9der yn9es speed wla yw9ef robot.
-6. Mission katmchi `P1 -> P2 -> P3 -> BASE`.
-7. Telemetry kattsjel f `logs/`.
-8. Local LLM kay7awwel Darija/English/French l strict mission JSON.
-9. Deterministic validator kayrefed waypoint wla speed ma-amnach.
+6. JSON map kat7edded 11 points w several static obstacles.
+7. Operator y9der ykhtar route b Darija, English, wla French.
+8. Telemetry kattsjel f `logs/`.
+9. Local LLM kay7awwel l-command l strict mission JSON.
+10. Deterministic validator kayrefed waypoint wla speed ma-amnach.
 
 ## Cognitive local-LLM demo
 
@@ -43,6 +45,27 @@ Interactive mode:
 ```powershell
 python run_cognitive_demo.py
 ```
+
+The terminal lists `BASE` and `P1` through `P10`. Example:
+
+```text
+Sir P2, P5, P10, w rje3 l BASE b speed 0.15 m/s
+```
+
+The 3D window is the physics view; mission text stays in the external terminal
+so a future voice adapter can feed the same validated command pipeline.
+
+## Data-driven world
+
+The default map is:
+
+```text
+world/maps/warehouse_v1.json
+```
+
+It stores map bounds, waypoint coordinates, obstacle sizes/colors, robot start,
+and the default route. The simulator loads every obstacle into PyBullet and
+inflates it in the A* occupancy grid using robot size plus safety margin.
 
 The LLM never controls wheels or motors. It can only propose configured
 waypoint names and a bounded speed. Read
@@ -89,15 +112,15 @@ python -m unittest discover -s tests -v
 ## Expected mission output
 
 ```text
-PLAN P1: ...
-P1 WSEL
-NEXT TARGET: P2
+PLAN P2: ...
 P2 WSEL
-NEXT TARGET: P3
-P3 WSEL
+NEXT TARGET: P5
+P5 WSEL
+NEXT TARGET: P10
+P10 WSEL
 NEXT TARGET: BASE
 BASE WSEL
-MISSION SUCCESS: P1 -> P2 -> P3 -> BASE
+MISSION SUCCESS: P2 -> P5 -> P10 -> BASE
 ```
 
 ## Project structure
@@ -105,7 +128,7 @@ MISSION SUCCESS: P1 -> P2 -> P3 -> BASE
 ```text
 roverguard/       Python core: math, planning, safety, simulation, AI boundary
 robot/            URDF dyal robot
-world/            URDF dyal obstacles
+world/            JSON maps and legacy URDF obstacles
 tests/            automatic unit tests
 examples/         reproducible natural-language mission prompts
 firmware/         hardware-neutral C++ controller/HAL

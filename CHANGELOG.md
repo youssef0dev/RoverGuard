@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.4.0 - Multi-point mission world
+
+- Added a strict JSON warehouse map with `BASE`, `P1` through `P10`.
+- Added five independently sized and colored static obstacles.
+- Added strict map loading and validation.
+- A* now builds its occupancy grid from every configured obstacle.
+- PyBullet now creates all map obstacles dynamically.
+- The external mission console lists available points and accepts multi-point
+  Darija, English, or French commands.
+- Added multi-obstacle planning and world-map tests (22 total tests).
+- Prepared a clean input boundary for the next voice-command milestone.
+
 ## 0.3.0
 
 - Added a local Ollama natural-language mission planner.

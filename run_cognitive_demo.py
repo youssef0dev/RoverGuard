@@ -15,7 +15,8 @@ from roverguard.ai import (
 )
 from roverguard.cognitive_mission import save_mission_audit
 from roverguard.config import AppConfig
-from roverguard.simulation import run as run_simulation
+from roverguard.simulation import DEFAULT_WORLD_MAP, run as run_simulation
+from roverguard.world_map import load_world_map
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -44,22 +45,33 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--no-realtime", action="store_true")
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--max-seconds", type=float, default=None)
+    parser.add_argument(
+        "--map",
+        default=str(DEFAULT_WORLD_MAP),
+        help="Path to the JSON world map.",
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
+    config = AppConfig()
+    world_map = load_world_map(args.map)
+    configured = world_map.waypoint_lookup
+
     command = args.command
     if command is None:
-        print("\nROVERGUARD COGNITIVE MISSION")
-        print("Example: Inspect P1 and P3, then return to base")
+        available = ", ".join(configured)
+        print("\nROVERGUARD v0.4 MISSION CONSOLE")
+        print("Map:", world_map.name)
+        print("Points:", available)
+        print("Example: Sir P2, P5, P10, w rje3 l BASE")
         command = input("Kteb mission: ").strip()
 
-    config = AppConfig()
-    configured = dict(config.mission.waypoints)
     validator = MissionValidator(
         allowed_waypoints=tuple(configured),
         max_robot_speed_mps=config.robot.max_linear_speed_mps,
+        max_mission_waypoints=min(12, len(configured)),
     )
     provider = OllamaProvider(
         model=args.model,
@@ -92,12 +104,14 @@ def main() -> None:
         no_realtime=args.no_realtime,
         seed=args.seed,
         max_seconds=args.max_seconds,
+        map=args.map,
     )
     result = run_simulation(
         simulation_args,
         mission_waypoints=resolved_waypoints,
         max_linear_speed_mps=plan.max_speed_mps,
         mission_label=plan.mission_name,
+        world_map=world_map,
     )
     raise SystemExit(result)
 

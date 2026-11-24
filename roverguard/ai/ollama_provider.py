@@ -1,4 +1,4 @@
-﻿"""Minimal Ollama client using only Python's standard library."""
+"""Minimal Ollama client using only Python's standard library."""
 
 from __future__ import annotations
 
@@ -61,10 +61,20 @@ class OllamaProvider:
             raise OllamaProviderError(
                 f"Ollama HTTP {error.code}: {detail[:300]}"
             ) from error
-        except (urllib.error.URLError, socket.timeout, TimeoutError) as error:
+        except urllib.error.URLError as error:
+            if isinstance(error.reason, (socket.timeout, TimeoutError)):
+                raise OllamaProviderError(
+                    "Ollama kayjawb, walakin model ma-kmlch dakhel "
+                    f"{self.timeout_s:.0f} seconds."
+                ) from error
             raise OllamaProviderError(
                 "Ma9drnach nwslou l Ollama. T2akked belli Ollama khddam "
-                f"f {self.base_url}."
+                f"f {self.base_url}. Sabab: {error.reason}"
+            ) from error
+        except (socket.timeout, TimeoutError) as error:
+            raise OllamaProviderError(
+                "Ollama kayjawb, walakin model ma-kmlch dakhel "
+                f"{self.timeout_s:.0f} seconds."
             ) from error
         except json.JSONDecodeError as error:
             raise OllamaProviderError("Ollama returned invalid API JSON") from error
@@ -79,4 +89,3 @@ class OllamaProvider:
         if not isinstance(mission_payload, dict):
             raise OllamaProviderError("Model mission must be one JSON object")
         return mission_payload
-

@@ -19,6 +19,7 @@ PLAN_FIELDS = {
 def mission_json_schema(
     allowed_waypoints: Sequence[str],
     max_speed_mps: float = 0.22,
+    max_waypoints: int = 12,
 ) -> dict[str, Any]:
     """Build the JSON schema sent to Ollama structured outputs."""
     names = list(allowed_waypoints)
@@ -36,7 +37,7 @@ def mission_json_schema(
                 "type": "array",
                 "items": {"type": "string", "enum": names},
                 "minItems": 1,
-                "maxItems": 8,
+                "maxItems": max_waypoints,
             },
             "return_to_base": {"type": "boolean"},
             "max_speed_mps": {

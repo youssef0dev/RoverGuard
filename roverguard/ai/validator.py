@@ -18,7 +18,7 @@ class MissionValidator:
     allowed_waypoints: tuple[str, ...]
     max_robot_speed_mps: float
     min_robot_speed_mps: float = 0.05
-    max_mission_waypoints: int = 8
+    max_mission_waypoints: int = 12
 
     def validate(self, plan: MissionPlan) -> MissionPlan:
         name = plan.mission_name.strip()

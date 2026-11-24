@@ -1,4 +1,4 @@
-﻿import argparse
+import argparse
 import math
 import random
 import time
@@ -17,27 +17,31 @@ from .path_follower import PathFollower
 from .safety import SafetyState, SafetySupervisor
 from .sensors import LowPassFilter, RangeReading, noisy_clamped_distance, rotate_xy
 from .telemetry import TelemetryLogger
+from .world_map import WorldMap, load_world_map
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_WORLD_MAP = PROJECT_ROOT / "world" / "maps" / "warehouse_v1.json"
 
 
-def build_grid(config: AppConfig) -> OccupancyGrid:
+def build_grid(config: AppConfig, world_map: WorldMap | None = None) -> OccupancyGrid:
+    active_map = world_map or load_world_map(DEFAULT_WORLD_MAP)
     planner = config.planner
     grid = OccupancyGrid(
-        min_x_m=planner.min_x_m,
-        max_x_m=planner.max_x_m,
-        min_y_m=planner.min_y_m,
-        max_y_m=planner.max_y_m,
+        min_x_m=active_map.bounds.min_x_m,
+        max_x_m=active_map.bounds.max_x_m,
+        min_y_m=active_map.bounds.min_y_m,
+        max_y_m=active_map.bounds.max_y_m,
         resolution_m=planner.resolution_m,
     )
     inflation = config.robot.footprint_radius_m + planner.safety_margin_m
-    grid.add_obstacle(config.world.obstacle, inflation)
+    for obstacle in active_map.obstacles:
+        grid.add_obstacle(obstacle.aabb, inflation)
     return grid
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="RoverGuard v0.3 safe cognitive patrol")
+    parser = argparse.ArgumentParser(description="RoverGuard v0.4 multi-point patrol")
     parser.add_argument(
         "--headless",
         action="store_true",
@@ -50,7 +54,53 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--max-seconds", type=float, default=None)
+    parser.add_argument(
+        "--map",
+        default=str(DEFAULT_WORLD_MAP),
+        help="Path to a RoverGuard world-map JSON file.",
+    )
     return parser.parse_args()
+
+
+def create_obstacles(pybullet, world_map: WorldMap) -> list[int]:
+    obstacle_ids: list[int] = []
+    for obstacle in world_map.obstacles:
+        half_extents = [
+            obstacle.size_x_m / 2.0,
+            obstacle.size_y_m / 2.0,
+            obstacle.height_m / 2.0,
+        ]
+        collision = pybullet.createCollisionShape(
+            pybullet.GEOM_BOX,
+            halfExtents=half_extents,
+        )
+        visual = pybullet.createVisualShape(
+            pybullet.GEOM_BOX,
+            halfExtents=half_extents,
+            rgbaColor=list(obstacle.color_rgba),
+        )
+        obstacle_id = pybullet.createMultiBody(
+            baseMass=0,
+            baseCollisionShapeIndex=collision,
+            baseVisualShapeIndex=visual,
+            basePosition=[
+                obstacle.center.x,
+                obstacle.center.y,
+                obstacle.height_m / 2.0,
+            ],
+        )
+        obstacle_ids.append(obstacle_id)
+        pybullet.addUserDebugText(
+            obstacle.name,
+            [
+                obstacle.center.x,
+                obstacle.center.y,
+                obstacle.height_m + 0.06,
+            ],
+            textColorRGB=[0.15, 0.15, 0.15],
+            textSize=0.85,
+        )
+    return obstacle_ids
 
 
 def create_waypoint_markers(pybullet, waypoints) -> None:
@@ -153,6 +203,7 @@ def run(
     mission_waypoints=None,
     max_linear_speed_mps: float | None = None,
     mission_label: str | None = None,
+    world_map: WorldMap | None = None,
 ) -> int:
     try:
         import pybullet as p
@@ -163,6 +214,9 @@ def run(
         ) from error
 
     config = AppConfig()
+    active_map = world_map or load_world_map(
+        getattr(args, "map", str(DEFAULT_WORLD_MAP))
+    )
     if max_linear_speed_mps is not None:
         if not 0.0 < max_linear_speed_mps <= config.robot.max_linear_speed_mps:
             raise ValueError("Mission speed is outside robot safety limits")
@@ -176,7 +230,7 @@ def run(
     active_waypoints = (
         tuple(mission_waypoints)
         if mission_waypoints is not None
-        else config.mission.waypoints
+        else active_map.resolve_route(active_map.default_route)
     )
     if not active_waypoints:
         raise ValueError("Simulation mission cannot be empty")
@@ -198,18 +252,14 @@ def run(
         p.setTimeStep(config.simulation.time_step_s)
         p.loadURDF("plane.urdf")
 
-        obstacle_id = p.loadURDF(
-            str(PROJECT_ROOT / "world" / "avoidance_obstacle.urdf"),
-            basePosition=[
-                config.world.obstacle_center.x,
-                config.world.obstacle_center.y,
-                0,
-            ],
-            useFixedBase=True,
-        )
+        obstacle_ids = create_obstacles(p, active_map)
         robot_id = p.loadURDF(
             str(PROJECT_ROOT / "robot" / "roverguard.urdf"),
-            basePosition=[0, 0, 0.15],
+            basePosition=[
+                active_map.robot_start.x,
+                active_map.robot_start.y,
+                0.15,
+            ],
         )
 
         joints: dict[str, int] = {}
@@ -243,14 +293,20 @@ def run(
 
         if not args.headless:
             p.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
+            map_width = active_map.bounds.max_x_m - active_map.bounds.min_x_m
+            map_height = active_map.bounds.max_y_m - active_map.bounds.min_y_m
             p.resetDebugVisualizerCamera(
-                cameraDistance=2.7,
+                cameraDistance=max(map_width, map_height) * 0.95,
                 cameraYaw=45,
-                cameraPitch=-55,
-                cameraTargetPosition=[0.45, 0.25, 0],
+                cameraPitch=-65,
+                cameraTargetPosition=[
+                    (active_map.bounds.min_x_m + active_map.bounds.max_x_m) / 2.0,
+                    (active_map.bounds.min_y_m + active_map.bounds.max_y_m) / 2.0,
+                    0,
+                ],
             )
 
-        create_waypoint_markers(p, active_waypoints)
+        create_waypoint_markers(p, active_map.waypoints)
 
         for _ in range(240):
             p.stepSimulation()
@@ -272,7 +328,7 @@ def run(
         )
         follower = PathFollower(controller)
         mission = PatrolMission(active_waypoints)
-        grid = build_grid(config)
+        grid = build_grid(config, active_map)
         planner = AStarPlanner(grid, config.planner.allow_diagonal)
         safety = SafetySupervisor(
             config.sensor.stop_distance_m,
@@ -305,7 +361,8 @@ def run(
         plan_for_current(current_pose)
 
         route_text = " -> ".join(name for name, _ in active_waypoints)
-        print("\nROVERGUARD v0.3 - SAFE COGNITIVE PATROL")
+        print("\nROVERGUARD v0.4 - MULTI-POINT COGNITIVE PATROL")
+        print("Map:", active_map.name)
         if mission_label:
             print("Mission:", mission_label)
         print("Route:", route_text)
@@ -388,7 +445,7 @@ def run(
             )
             filtered_front = front_filter.update(front.distance_m)
 
-            if p.getContactPoints(robot_id, obstacle_id):
+            if any(p.getContactPoints(robot_id, item_id) for item_id in obstacle_ids):
                 set_wheel_speeds(
                     p,
                     robot_id,
@@ -519,5 +576,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
 

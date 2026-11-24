@@ -46,7 +46,7 @@ class SensorConfig:
 @dataclass(frozen=True)
 class SimulationConfig:
     time_step_s: float = 1.0 / 240.0
-    max_seconds: float = 90.0
+    max_seconds: float = 180.0
     inspection_seconds: float = 0.50
     localization_interval_steps: int = 24
     localization_gain: float = 0.25
