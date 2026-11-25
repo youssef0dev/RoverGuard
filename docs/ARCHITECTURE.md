@@ -17,14 +17,14 @@ Mission target
 Sensor kaymchi l `SafetySupervisor` b tari9 mosta9il. Ya3ni safety t9der
 tw9ef robot wakha planner/controller 3taw command dyal l9dam.
 
-## Cognitive mission flow (v0.3)
+## Cognitive mission flow (v0.5)
 
 ```text
 Darija / English / French command
     -> local Ollama model
     -> strict JSON MissionPlan
     -> deterministic MissionValidator
-    -> configured waypoint names and speed limit
+    -> configured waypoint names, photo actions, and speed limit
     -> deterministic data flow above
 ```
 
@@ -43,6 +43,8 @@ wla terminal. Ila output ma-s7i7ch, simulation ma-katbdach.
 - `safety.py`: CLEAR/SLOW/STOP m3a hysteresis.
 - `simulation.py`: PyBullet ghir adapter, machi source dyal core logic.
 - `ai/`: local model adapter, strict mission schema, w safety validation.
+- `camera.py`: robot-link RGB view and PNG capture.
+- `world_map.py`: strict JSON world loading and multi-obstacle map data.
 - `cognitive_mission.py`: approved mission audit logs.
 
 ## 3lach had ta9sim mohim?

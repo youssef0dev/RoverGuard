@@ -24,7 +24,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="RoverGuard v0.3 local-LLM cognitive mission demo"
+        description="RoverGuard v0.5 action-aware cognitive mission demo"
     )
     parser.add_argument("--command", help="Natural-language mission command")
     parser.add_argument(
@@ -62,10 +62,13 @@ def main() -> None:
     command = args.command
     if command is None:
         available = ", ".join(configured)
-        print("\nROVERGUARD v0.4 MISSION CONSOLE")
+        print("\nROVERGUARD v0.5 MISSION CONSOLE")
         print("Map:", world_map.name)
         print("Points:", available)
-        print("Example: Sir P2, P5, P10, w rje3 l BASE")
+        print(
+            "Example: Go to P3 and take a photo, then P6, then P8 "
+            "and take a photo, then return to BASE"
+        )
         command = input("Kteb mission: ").strip()
 
     validator = MissionValidator(
@@ -112,6 +115,7 @@ def main() -> None:
         max_linear_speed_mps=plan.max_speed_mps,
         mission_label=plan.mission_name,
         world_map=world_map,
+        photo_waypoints=plan.photo_waypoints,
     )
     raise SystemExit(result)
 

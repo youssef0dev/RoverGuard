@@ -25,6 +25,7 @@ def valid_payload():
     return {
         "mission_name": "Lab inspection",
         "waypoints": ["P1", "P3"],
+        "photo_waypoints": [],
         "return_to_base": True,
         "max_speed_mps": 0.18,
         "inspection_note": "Check the marked stations.",
@@ -73,6 +74,18 @@ class MissionValidatorTests(unittest.TestCase):
         payload["waypoints"] = ["P1", "P1"]
         with self.assertRaises(MissionValidationError):
             self.validator.validate(MissionPlan.from_mapping(payload))
+
+    def test_photo_waypoints_must_be_part_of_route(self):
+        payload = valid_payload()
+        payload["photo_waypoints"] = ["P2"]
+        with self.assertRaises(MissionValidationError):
+            self.validator.validate(MissionPlan.from_mapping(payload))
+
+    def test_requested_photo_waypoints_are_preserved(self):
+        payload = valid_payload()
+        payload["photo_waypoints"] = ["P1", "P3"]
+        plan = self.validator.validate(MissionPlan.from_mapping(payload))
+        self.assertEqual(plan.photo_waypoints, ("P1", "P3"))
 
     def test_planner_uses_structured_schema_and_validator(self):
         provider = FakeProvider(valid_payload())

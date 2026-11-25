@@ -107,7 +107,7 @@ def load_world_map(path: str | Path) -> WorldMap:
     start_xy = _vector(payload.get("robot_start"), 2, "robot_start")
     robot_start = Point2D(*start_xy)
     if robot_start != Point2D(0.0, 0.0):
-        raise WorldMapError("v0.4 requires robot_start [0, 0]")
+        raise WorldMapError("Current map format requires robot_start [0, 0]")
 
     waypoint_data = payload.get("waypoints")
     if not isinstance(waypoint_data, dict) or not waypoint_data:

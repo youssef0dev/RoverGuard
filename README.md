@@ -1,6 +1,6 @@
-# RoverGuard v0.4
+# RoverGuard v0.5
 
-Data-driven, multi-point local-LLM mission planning for a wheeled
+Action-aware, multi-point local-LLM mission planning for a wheeled
 differential-drive inspection robot: PyBullet simulation, A* navigation,
 independent safety, odometry, telemetry, tests, and a hardware-neutral C++
 firmware core.
@@ -17,6 +17,7 @@ firmware core.
 8. Telemetry kattsjel f `logs/`.
 9. Local LLM kay7awwel l-command l strict mission JSON.
 10. Deterministic validator kayrefed waypoint wla speed ma-amnach.
+11. Operator y9der yطلب photo f points mo3ayanin; PNG kattsjel f `captures/`.
 
 ## Cognitive local-LLM demo
 
@@ -51,6 +52,25 @@ The terminal lists `BASE` and `P1` through `P10`. Example:
 ```text
 Sir P2, P5, P10, w rje3 l BASE b speed 0.15 m/s
 ```
+
+Photo mission example:
+
+```text
+Go to P3 and take a photo, then go to P6, then go to P8 and take a photo, then return to BASE.
+```
+
+The approved JSON separates the route from the requested camera actions:
+
+```json
+{
+  "waypoints": ["P3", "P6", "P8", "BASE"],
+  "photo_waypoints": ["P3", "P8"]
+}
+```
+
+When the robot is stable at each requested point, its simulated front camera
+captures a 640x480 RGB PNG under `captures/`. Runtime captures are ignored by
+Git by default.
 
 The 3D window is the physics view; mission text stays in the external terminal
 so a future voice adapter can feed the same validated command pipeline.
@@ -129,6 +149,7 @@ MISSION SUCCESS: P2 -> P5 -> P10 -> BASE
 roverguard/       Python core: math, planning, safety, simulation, AI boundary
 robot/            URDF dyal robot
 world/            JSON maps and legacy URDF obstacles
+captures/         Runtime RGB photos requested by approved missions
 tests/            automatic unit tests
 examples/         reproducible natural-language mission prompts
 firmware/         hardware-neutral C++ controller/HAL

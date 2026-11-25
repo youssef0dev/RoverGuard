@@ -66,9 +66,25 @@ class MissionValidator:
         if not route:
             raise MissionValidationError("Mission route cannot be empty")
 
+        photos = tuple(item.strip().upper() for item in plan.photo_waypoints)
+        if len(set(photos)) != len(photos):
+            raise MissionValidationError("Repeated photo waypoint")
+        unknown_photos = [item for item in photos if item not in allowed]
+        if unknown_photos:
+            raise MissionValidationError(
+                f"Unknown photo waypoint(s): {', '.join(unknown_photos)}"
+            )
+        outside_route = [item for item in photos if item not in route]
+        if outside_route:
+            raise MissionValidationError(
+                "Photo waypoint must also be in mission route: "
+                + ", ".join(outside_route)
+            )
+
         return MissionPlan(
             mission_name=name,
             waypoints=route,
+            photo_waypoints=photos,
             return_to_base=return_to_base,
             max_speed_mps=plan.max_speed_mps,
             inspection_note=note,

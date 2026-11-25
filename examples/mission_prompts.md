@@ -33,3 +33,16 @@ Inspect P9, P4 and P6, then return to base slowly.
 ```text
 Visite P8 puis P3 et P5, ensuite retourne a BASE.
 ```
+
+Photo-action example:
+
+```text
+Go to P3 and take a photo, then go to P6, then go to P8 and take a photo, then return to BASE.
+```
+
+Expected action split:
+
+```text
+waypoints: P3, P6, P8, BASE
+photo_waypoints: P3, P8
+```

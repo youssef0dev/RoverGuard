@@ -10,6 +10,7 @@ from typing import Any, Mapping, Sequence
 PLAN_FIELDS = {
     "mission_name",
     "waypoints",
+    "photo_waypoints",
     "return_to_base",
     "max_speed_mps",
     "inspection_note",
@@ -39,6 +40,11 @@ def mission_json_schema(
                 "minItems": 1,
                 "maxItems": max_waypoints,
             },
+            "photo_waypoints": {
+                "type": "array",
+                "items": {"type": "string", "enum": names},
+                "maxItems": max_waypoints,
+            },
             "return_to_base": {"type": "boolean"},
             "max_speed_mps": {
                 "type": "number",
@@ -59,6 +65,7 @@ def mission_json_schema(
 class MissionPlan:
     mission_name: str
     waypoints: tuple[str, ...]
+    photo_waypoints: tuple[str, ...]
     return_to_base: bool
     max_speed_mps: float
     inspection_note: str
@@ -74,6 +81,7 @@ class MissionPlan:
 
         mission_name = payload["mission_name"]
         waypoints = payload["waypoints"]
+        photo_waypoints = payload["photo_waypoints"]
         return_to_base = payload["return_to_base"]
         max_speed = payload["max_speed_mps"]
         inspection_note = payload["inspection_note"]
@@ -84,6 +92,10 @@ class MissionPlan:
             isinstance(item, str) for item in waypoints
         ):
             raise ValueError("waypoints must be a list of strings")
+        if not isinstance(photo_waypoints, list) or not all(
+            isinstance(item, str) for item in photo_waypoints
+        ):
+            raise ValueError("photo_waypoints must be a list of strings")
         if not isinstance(return_to_base, bool):
             raise ValueError("return_to_base must be a boolean")
         if isinstance(max_speed, bool) or not isinstance(max_speed, (int, float)):
@@ -94,6 +106,7 @@ class MissionPlan:
         return cls(
             mission_name=mission_name,
             waypoints=tuple(waypoints),
+            photo_waypoints=tuple(photo_waypoints),
             return_to_base=return_to_base,
             max_speed_mps=float(max_speed),
             inspection_note=inspection_note,
@@ -109,6 +122,7 @@ class MissionPlan:
     def to_dict(self) -> dict[str, Any]:
         data = asdict(self)
         data["waypoints"] = list(self.waypoints)
+        data["photo_waypoints"] = list(self.photo_waypoints)
         return data
 
     def to_json(self, *, indent: int = 2) -> str:

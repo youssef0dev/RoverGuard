@@ -25,6 +25,7 @@ class OllamaProviderTests(unittest.TestCase):
         mission = {
             "mission_name": "Inspection",
             "waypoints": ["P1"],
+            "photo_waypoints": ["P1"],
             "return_to_base": True,
             "max_speed_mps": 0.15,
             "inspection_note": "Check P1.",

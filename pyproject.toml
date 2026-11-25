@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "roverguard"
-version = "0.4.0"
-description = "Data-driven multi-point missions for a safe differential-drive robot"
+version = "0.5.0"
+description = "Action-aware multi-point missions and robot camera captures"
 requires-python = ">=3.11"
-dependencies = ["pybullet==3.2.7"]
+dependencies = ["pybullet==3.2.7", "Pillow==13.0.0"]
 
 [tool.setuptools.packages.find]
 include = ["roverguard*"]

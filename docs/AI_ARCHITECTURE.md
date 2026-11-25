@@ -15,8 +15,9 @@ Operator language
 ```
 
 The model cannot create coordinates, PWM values, joint speeds, shell commands,
-or Python code. It can only select configured waypoint names, a bounded maximum
-speed, a return-to-base flag, and a short inspection note.
+or Python code. It can only select configured waypoint names, mark a subset of
+the approved route for photos, choose a bounded maximum speed, set a
+return-to-base flag, and write a short inspection note.
 
 ## Failure behavior
 
@@ -46,8 +47,12 @@ Every approved request is stored under `logs/ai_mission_*.json` with:
 
 These runtime logs are excluded from Git.
 
-## Next version
+## Camera action boundary
 
-Version 0.4 will capture inspection images at mission targets and send selected
-snapshots to a vision-language model. Image analysis will remain outside the
+The LLM can request a photo only by adding a route point to `photo_waypoints`.
+The deterministic validator checks that the point exists and belongs to the
+approved route. The simulation captures only after confirmed arrival.
+
+Voice input is the next adapter. It will convert audio to text and feed this
+same guarded mission path. Future image analysis will also remain outside the
 real-time motor and safety loop.

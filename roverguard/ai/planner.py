@@ -49,6 +49,9 @@ class CognitiveMissionPlanner:
             f"{self.validator.max_robot_speed_mps:.2f} m/s. "
             "Set return_to_base true when the request says return, come back, "
             "rje3, or mentions BASE. Do not include explanations outside JSON."
+            " Put a waypoint in photo_waypoints only when the operator asks to "
+            "take a photo there. Use an empty photo_waypoints list when no photo "
+            "is requested. Every photo waypoint must also exist in waypoints."
         )
         payload = self.provider.generate_mission(
             system_prompt=system_prompt,

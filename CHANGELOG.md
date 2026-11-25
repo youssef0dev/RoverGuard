@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.5.0 - Mission camera actions
+
+- Added `photo_waypoints` to the strict local-LLM mission contract.
+- The validator rejects unknown, repeated, or out-of-route photo requests.
+- Added a robot-mounted 640x480 RGB camera using PyBullet view/projection APIs.
+- Requested photos are captured only after the robot reaches and stabilizes at
+  the approved waypoint.
+- PNG captures are stored locally under `captures/` with UTC timestamps.
+- Added Pillow image encoding and deterministic camera tests.
+- Expanded the pure software suite to 25 tests.
+
 ## v0.4.0 - Multi-point mission world
 
 - Added a strict JSON warehouse map with `BASE`, `P1` through `P10`.

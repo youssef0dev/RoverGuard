@@ -6,6 +6,7 @@ from dataclasses import replace
 from pathlib import Path
 
 from .astar import AStarPlanner, PathNotFoundError, PlannedPath
+from .camera import capture_robot_camera
 from .config import AppConfig
 from .controllers import PointController
 from .geometry import Point2D, Pose2D, normalize_angle
@@ -41,7 +42,7 @@ def build_grid(config: AppConfig, world_map: WorldMap | None = None) -> Occupanc
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="RoverGuard v0.4 multi-point patrol")
+    parser = argparse.ArgumentParser(description="RoverGuard v0.5 camera-action patrol")
     parser.add_argument(
         "--headless",
         action="store_true",
@@ -204,6 +205,7 @@ def run(
     max_linear_speed_mps: float | None = None,
     mission_label: str | None = None,
     world_map: WorldMap | None = None,
+    photo_waypoints: tuple[str, ...] = (),
 ) -> int:
     try:
         import pybullet as p
@@ -234,6 +236,14 @@ def run(
     )
     if not active_waypoints:
         raise ValueError("Simulation mission cannot be empty")
+    route_names = {name for name, _ in active_waypoints}
+    unknown_photo_points = set(photo_waypoints) - route_names
+    if unknown_photo_points:
+        raise ValueError(
+            "Photo waypoint is outside the active route: "
+            + ", ".join(sorted(unknown_photo_points))
+        )
+    photo_targets = set(photo_waypoints)
     if args.max_seconds is not None:
         max_seconds = args.max_seconds
     else:
@@ -361,7 +371,7 @@ def run(
         plan_for_current(current_pose)
 
         route_text = " -> ".join(name for name, _ in active_waypoints)
-        print("\nROVERGUARD v0.4 - MULTI-POINT COGNITIVE PATROL")
+        print("\nROVERGUARD v0.5 - CAMERA-ACTION COGNITIVE PATROL")
         print("Map:", active_map.name)
         if mission_label:
             print("Mission:", mission_label)
@@ -467,14 +477,29 @@ def run(
                 if inspection_remaining == 0:
                     reached = mission.mark_current_reached()
                     print(f"\n{reached.name} WSEL")
+                    if reached.name in photo_targets:
+                        capture_path = capture_robot_camera(
+                            p,
+                            robot_id=robot_id,
+                            sensor_joint=sensor_joint,
+                            waypoint_name=reached.name,
+                            output_directory=PROJECT_ROOT / "captures",
+                            config=config.camera,
+                        )
+                        print("PHOTO SAVED:", capture_path)
+                        event = f"PHOTO_CAPTURED_{reached.name}"
                     if mission.complete:
                         mission_success = True
                         print("MISSION SUCCESS:", route_text)
-                        event = "MISSION_SUCCESS"
+                        event = "|".join(
+                            item for item in (event, "MISSION_SUCCESS") if item
+                        )
                     else:
                         plan_for_current(current_pose)
                         print("NEXT TARGET:", mission.current.name)
-                        event = "NEXT_TARGET"
+                        event = "|".join(
+                            item for item in (event, "NEXT_TARGET") if item
+                        )
             else:
                 command = follower.compute(current_pose)
                 if command.reached and follower.finished:

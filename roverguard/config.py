@@ -44,6 +44,17 @@ class SensorConfig:
 
 
 @dataclass(frozen=True)
+class CameraConfig:
+    width_px: int = 640
+    height_px: int = 480
+    field_of_view_deg: float = 70.0
+    near_plane_m: float = 0.02
+    far_plane_m: float = 12.0
+    forward_offset_m: float = 0.03
+    vertical_offset_m: float = 0.04
+
+
+@dataclass(frozen=True)
 class SimulationConfig:
     time_step_s: float = 1.0 / 240.0
     max_seconds: float = 180.0
@@ -89,6 +100,7 @@ class AppConfig:
     robot: RobotConfig = field(default_factory=RobotConfig)
     planner: PlannerConfig = field(default_factory=PlannerConfig)
     sensor: SensorConfig = field(default_factory=SensorConfig)
+    camera: CameraConfig = field(default_factory=CameraConfig)
     simulation: SimulationConfig = field(default_factory=SimulationConfig)
     mission: MissionConfig = field(default_factory=MissionConfig)
     world: WorldConfig = field(default_factory=WorldConfig)
