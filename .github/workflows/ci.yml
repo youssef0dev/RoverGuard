@@ -16,6 +16,7 @@ jobs:
         run: >-
           python -m compileall -q
           roverguard tests run_roverguard.py run_cognitive_demo.py
+          run_homeguard.py
       - name: Unit tests
         run: python -m unittest discover -s tests -v
 

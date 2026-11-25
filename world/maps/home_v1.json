@@ -1,0 +1,199 @@
+{
+  "schema_version": 2,
+  "name": "RoverGuard Home V1",
+  "bounds": {
+    "min_x_m": -0.6,
+    "max_x_m": 6.4,
+    "min_y_m": -0.6,
+    "max_y_m": 5.4
+  },
+  "robot_start": [0.0, 0.0],
+  "waypoints": {
+    "BASE": [0.0, 0.0],
+    "ENTRANCE": [0.0, 0.0],
+    "CORRIDOR": [3.0, 2.45],
+    "SALON": [2.2, 4.4],
+    "KITCHEN": [4.3, 4.7],
+    "BEDROOM": [3.7, 1.1],
+    "BATHROOM": [2.1, 1.1]
+  },
+  "default_route": ["SALON", "KITCHEN", "BEDROOM", "BATHROOM", "BASE"],
+  "rooms": {
+    "ENTRANCE": {
+      "display_name": "Entrance",
+      "area": [-0.45, 1.4, -0.45, 2.0],
+      "inspection_point": [0.0, 0.0],
+      "inspection_yaw_deg": 45.0,
+      "aliases": ["entry", "lmdkhal"]
+    },
+    "CORRIDOR": {
+      "display_name": "Corridor",
+      "area": [-0.45, 6.25, 2.0, 2.9],
+      "inspection_point": [3.0, 2.45],
+      "inspection_yaw_deg": 0.0,
+      "aliases": ["hallway", "couloir", "lmmer"]
+    },
+    "SALON": {
+      "display_name": "Living Room",
+      "area": [-0.45, 2.8, 2.9, 5.25],
+      "inspection_point": [2.2, 4.4],
+      "inspection_yaw_deg": 180.0,
+      "aliases": ["salon", "living room", "sejour", "séjour"]
+    },
+    "KITCHEN": {
+      "display_name": "Kitchen",
+      "area": [2.8, 6.25, 2.9, 5.25],
+      "inspection_point": [4.3, 4.7],
+      "inspection_yaw_deg": -90.0,
+      "aliases": ["cuisine", "matbakh"]
+    },
+    "BEDROOM": {
+      "display_name": "Bedroom",
+      "area": [2.8, 6.25, -0.45, 2.0],
+      "inspection_point": [3.7, 1.1],
+      "inspection_yaw_deg": 0.0,
+      "aliases": ["chambre", "sleeping room", "bit n3as"]
+    },
+    "BATHROOM": {
+      "display_name": "Bathroom",
+      "area": [1.4, 2.8, -0.45, 2.0],
+      "inspection_point": [2.1, 1.1],
+      "inspection_yaw_deg": -90.0,
+      "aliases": ["bath", "salle de bain", "hammam"]
+    }
+  },
+  "obstacles": [
+    {
+      "name": "WALL_OUTER_SOUTH",
+      "center": [2.9, -0.5],
+      "size": [6.8, 0.1, 0.7],
+      "color": [0.82, 0.84, 0.88, 1.0]
+    },
+    {
+      "name": "WALL_OUTER_NORTH",
+      "center": [2.9, 5.3],
+      "size": [6.8, 0.1, 0.7],
+      "color": [0.82, 0.84, 0.88, 1.0]
+    },
+    {
+      "name": "WALL_OUTER_WEST",
+      "center": [-0.5, 2.4],
+      "size": [0.1, 5.8, 0.7],
+      "color": [0.82, 0.84, 0.88, 1.0]
+    },
+    {
+      "name": "WALL_OUTER_EAST",
+      "center": [6.3, 2.4],
+      "size": [0.1, 5.8, 0.7],
+      "color": [0.82, 0.84, 0.88, 1.0]
+    },
+    {
+      "name": "WALL_LOWER_A",
+      "center": [0.0, 2.0],
+      "size": [0.9, 0.1, 0.7],
+      "color": [0.82, 0.84, 0.88, 1.0]
+    },
+    {
+      "name": "WALL_LOWER_B",
+      "center": [1.5, 2.0],
+      "size": [0.5, 0.1, 0.7],
+      "color": [0.82, 0.84, 0.88, 1.0]
+    },
+    {
+      "name": "WALL_LOWER_C",
+      "center": [2.925, 2.0],
+      "size": [0.95, 0.1, 0.7],
+      "color": [0.82, 0.84, 0.88, 1.0]
+    },
+    {
+      "name": "WALL_LOWER_D",
+      "center": [5.225, 2.0],
+      "size": [2.05, 0.1, 0.7],
+      "color": [0.82, 0.84, 0.88, 1.0]
+    },
+    {
+      "name": "WALL_UPPER_A",
+      "center": [0.325, 2.9],
+      "size": [1.55, 0.1, 0.7],
+      "color": [0.82, 0.84, 0.88, 1.0]
+    },
+    {
+      "name": "WALL_UPPER_B",
+      "center": [3.05, 2.9],
+      "size": [2.3, 0.1, 0.7],
+      "color": [0.82, 0.84, 0.88, 1.0]
+    },
+    {
+      "name": "WALL_UPPER_C",
+      "center": [5.625, 2.9],
+      "size": [1.25, 0.1, 0.7],
+      "color": [0.82, 0.84, 0.88, 1.0]
+    },
+    {
+      "name": "WALL_LOWER_VERTICAL_A",
+      "center": [1.4, 0.775],
+      "size": [0.1, 2.45, 0.7],
+      "color": [0.82, 0.84, 0.88, 1.0]
+    },
+    {
+      "name": "WALL_LOWER_VERTICAL_B",
+      "center": [2.8, 0.775],
+      "size": [0.1, 2.45, 0.7],
+      "color": [0.82, 0.84, 0.88, 1.0]
+    },
+    {
+      "name": "WALL_UPPER_VERTICAL",
+      "center": [2.8, 4.1],
+      "size": [0.1, 2.4, 0.7],
+      "color": [0.82, 0.84, 0.88, 1.0]
+    },
+    {
+      "name": "ENTRANCE_BENCH",
+      "center": [0.1, 1.4],
+      "size": [0.7, 0.3, 0.35],
+      "color": [0.42, 0.24, 0.12, 1.0]
+    },
+    {
+      "name": "BATHROOM_VANITY",
+      "center": [2.1, 0.05],
+      "size": [0.7, 0.35, 0.8],
+      "color": [0.75, 0.85, 0.92, 1.0]
+    },
+    {
+      "name": "BED",
+      "center": [5.0, 0.2],
+      "size": [1.8, 0.9, 0.45],
+      "color": [0.25, 0.45, 0.80, 1.0]
+    },
+    {
+      "name": "WARDROBE",
+      "center": [5.9, 1.45],
+      "size": [0.35, 0.8, 1.2],
+      "color": [0.50, 0.30, 0.16, 1.0]
+    },
+    {
+      "name": "SOFA",
+      "center": [0.6, 4.8],
+      "size": [1.5, 0.35, 0.55],
+      "color": [0.20, 0.42, 0.72, 1.0]
+    },
+    {
+      "name": "COFFEE_TABLE",
+      "center": [1.35, 3.75],
+      "size": [0.75, 0.45, 0.35],
+      "color": [0.52, 0.30, 0.15, 1.0]
+    },
+    {
+      "name": "KITCHEN_COUNTER",
+      "center": [5.8, 4.15],
+      "size": [0.4, 1.6, 0.9],
+      "color": [0.74, 0.76, 0.80, 1.0]
+    },
+    {
+      "name": "KITCHEN_ISLAND",
+      "center": [4.4, 3.7],
+      "size": [0.9, 0.45, 0.8],
+      "color": [0.62, 0.66, 0.72, 1.0]
+    }
+  ]
+}

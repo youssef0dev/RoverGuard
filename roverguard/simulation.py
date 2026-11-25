@@ -18,11 +18,12 @@ from .path_follower import PathFollower
 from .safety import SafetyState, SafetySupervisor
 from .sensors import LowPassFilter, RangeReading, noisy_clamped_distance, rotate_xy
 from .telemetry import TelemetryLogger
-from .world_map import WorldMap, load_world_map
+from .world_map import MapRoom, WorldMap, load_world_map
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_WORLD_MAP = PROJECT_ROOT / "world" / "maps" / "warehouse_v1.json"
+HOME_WORLD_MAP = PROJECT_ROOT / "world" / "maps" / "home_v1.json"
 
 
 def build_grid(config: AppConfig, world_map: WorldMap | None = None) -> OccupancyGrid:
@@ -91,20 +92,21 @@ def create_obstacles(pybullet, world_map: WorldMap) -> list[int]:
             ],
         )
         obstacle_ids.append(obstacle_id)
-        pybullet.addUserDebugText(
-            obstacle.name,
-            [
-                obstacle.center.x,
-                obstacle.center.y,
-                obstacle.height_m + 0.06,
-            ],
-            textColorRGB=[0.15, 0.15, 0.15],
-            textSize=0.85,
-        )
+        if not obstacle.name.startswith("WALL_"):
+            pybullet.addUserDebugText(
+                obstacle.name,
+                [
+                    obstacle.center.x,
+                    obstacle.center.y,
+                    obstacle.height_m + 0.06,
+                ],
+                textColorRGB=[0.15, 0.15, 0.15],
+                textSize=0.85,
+            )
     return obstacle_ids
 
 
-def create_waypoint_markers(pybullet, waypoints) -> None:
+def create_waypoint_markers(pybullet, waypoints, room_names=frozenset()) -> None:
     marker_visual = pybullet.createVisualShape(
         shapeType=pybullet.GEOM_CYLINDER,
         radius=0.045,
@@ -112,6 +114,8 @@ def create_waypoint_markers(pybullet, waypoints) -> None:
         rgbaColor=[0.1, 0.9, 0.1, 1.0],
     )
     for name, point in waypoints:
+        if name in room_names:
+            continue
         pybullet.createMultiBody(
             baseMass=0,
             baseVisualShapeIndex=marker_visual,
@@ -122,6 +126,34 @@ def create_waypoint_markers(pybullet, waypoints) -> None:
             [point.x, point.y, 0.07],
             textColorRGB=[0.1, 0.1, 0.1],
             textSize=1.2,
+        )
+
+
+def create_room_markers(pybullet, rooms: tuple[MapRoom, ...]) -> None:
+    """Draw semantic room boundaries without adding collision geometry."""
+    colors = (
+        [0.15, 0.55, 0.95],
+        [0.20, 0.75, 0.45],
+        [0.90, 0.55, 0.15],
+        [0.65, 0.35, 0.90],
+        [0.90, 0.30, 0.35],
+        [0.10, 0.70, 0.75],
+    )
+    for index, room in enumerate(rooms):
+        color = colors[index % len(colors)]
+        corners = (
+            [room.area.min_x, room.area.min_y, 0.015],
+            [room.area.max_x, room.area.min_y, 0.015],
+            [room.area.max_x, room.area.max_y, 0.015],
+            [room.area.min_x, room.area.max_y, 0.015],
+        )
+        for first, second in zip(corners, (*corners[1:], corners[0])):
+            pybullet.addUserDebugLine(first, second, color, lineWidth=2)
+        pybullet.addUserDebugText(
+            room.display_name,
+            [room.inspection_point.x, room.inspection_point.y, 0.10],
+            textColorRGB=color,
+            textSize=1.15,
         )
 
 
@@ -281,6 +313,7 @@ def run(
         right_joint = joints["right_wheel_joint"]
         caster_joint = joints["rear_caster_joint"]
         sensor_joint = joints["front_sensor_joint"]
+        camera_joint = joints["camera_head_joint"]
 
         p.changeDynamics(
             robot_id,
@@ -316,7 +349,10 @@ def run(
                 ],
             )
 
-        create_waypoint_markers(p, active_map.waypoints)
+        room_names = frozenset(room.name for room in active_map.rooms)
+        create_waypoint_markers(p, active_map.waypoints, room_names)
+        if not args.headless:
+            create_room_markers(p, active_map.rooms)
 
         for _ in range(240):
             p.stepSimulation()
@@ -371,7 +407,7 @@ def run(
         plan_for_current(current_pose)
 
         route_text = " -> ".join(name for name, _ in active_waypoints)
-        print("\nROVERGUARD v0.5 - CAMERA-ACTION COGNITIVE PATROL")
+        print("\nROVERGUARD v0.6 - SEMANTIC HOME NAVIGATION")
         print("Map:", active_map.name)
         if mission_label:
             print("Mission:", mission_label)
@@ -481,7 +517,7 @@ def run(
                         capture_path = capture_robot_camera(
                             p,
                             robot_id=robot_id,
-                            sensor_joint=sensor_joint,
+                            camera_joint=camera_joint,
                             waypoint_name=reached.name,
                             output_directory=PROJECT_ROOT / "captures",
                             config=config.camera,

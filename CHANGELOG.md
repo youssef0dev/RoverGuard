@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.6.0 - Semantic home navigation
+
+- Added a schema-v2 semantic map format with named rooms and inspection poses.
+- Added strict multilingual room aliases with collision detection.
+- Added a six-room house environment with walls and furniture.
+- Added deterministic room navigation through `run_homeguard.py`.
+- The local LLM can now map natural-language room requests to canonical names.
+- Added semantic room boundary overlays in the PyBullet GUI.
+- Preserved full backward compatibility with the v0.5 warehouse map.
+- Expanded the pure software suite to 33 tests, including all-room reachability.
+
 ## v0.5.0 - Mission camera actions
 
 - Added `photo_waypoints` to the strict local-LLM mission contract.
