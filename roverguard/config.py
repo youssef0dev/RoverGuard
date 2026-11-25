@@ -9,8 +9,8 @@ class RobotConfig:
     wheel_separation_m: float = 0.23
     body_length_m: float = 0.30
     body_width_m: float = 0.26
-    motor_force_n: float = 2.0
-    max_linear_speed_mps: float = 0.22
+    motor_force_n: float = 2.4
+    max_linear_speed_mps: float = 0.28
     max_angular_speed_rps: float = 1.8
 
     @property
@@ -38,26 +38,32 @@ class SensorConfig:
     side_angle_deg: float = 45.0
     noise_std_m: float = 0.01
     filter_alpha: float = 0.20
-    slow_distance_m: float = 0.25
-    stop_distance_m: float = 0.12
-    clear_distance_m: float = 0.30
+    # The ray starts at the front edge of the chassis. These limits are
+    # therefore measured from the sensor, not from the robot centre.
+    slow_distance_m: float = 0.18
+    stop_distance_m: float = 0.08
+    clear_distance_m: float = 0.24
 
 
 @dataclass(frozen=True)
 class CameraConfig:
-    width_px: int = 640
-    height_px: int = 480
-    field_of_view_deg: float = 70.0
+    width_px: int = 960
+    height_px: int = 720
+    field_of_view_deg: float = 72.0
     near_plane_m: float = 0.02
     far_plane_m: float = 12.0
-    forward_offset_m: float = 0.03
-    vertical_offset_m: float = 0.04
+    forward_offset_m: float = 0.04
+    # Small optical offset from the dedicated camera_head URDF link. The
+    # physical height itself belongs in the robot model, not in Python.
+    vertical_offset_m: float = 0.02
+    pitch_down_deg: float = 8.0
+    target_distance_m: float = 3.0
 
 
 @dataclass(frozen=True)
 class SimulationConfig:
     time_step_s: float = 1.0 / 240.0
-    max_seconds: float = 180.0
+    max_seconds: float = 360.0
     inspection_seconds: float = 0.50
     localization_interval_steps: int = 24
     localization_gain: float = 0.25

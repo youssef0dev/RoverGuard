@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "roverguard"
-version = "0.5.0"
-description = "Action-aware multi-point missions and robot camera captures"
+version = "0.6.0"
+description = "Semantic indoor navigation for an autonomous inspection robot"
 requires-python = ">=3.11"
 dependencies = ["pybullet==3.2.7", "Pillow==13.0.0"]
 

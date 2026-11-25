@@ -1,4 +1,4 @@
-name: RoverGuard CI
+﻿name: RoverGuard CI
 
 on:
   push:
@@ -12,10 +12,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
+      - name: Install test dependencies
+        run: python -m pip install Pillow==13.0.0
       - name: Compile Python
         run: >-
           python -m compileall -q
           roverguard tests run_roverguard.py run_cognitive_demo.py
+          run_homeguard.py
       - name: Unit tests
         run: python -m unittest discover -s tests -v
 
@@ -33,4 +36,5 @@ jobs:
           -o roverguard_firmware_demo
       - name: Run desktop firmware demo
         run: ./roverguard_firmware_demo
+
 

@@ -42,6 +42,23 @@ class MapObstacle:
 
 
 @dataclass(frozen=True)
+class MapRoom:
+    """Named indoor region with one safe robot inspection pose."""
+
+    name: str
+    display_name: str
+    area: AABB
+    inspection_point: Point2D
+    inspection_yaw_deg: float
+    aliases: tuple[str, ...]
+
+    def matches(self, label: str) -> bool:
+        normalized = label.strip().casefold()
+        candidates = (self.name, self.display_name, *self.aliases)
+        return normalized in {candidate.strip().casefold() for candidate in candidates}
+
+
+@dataclass(frozen=True)
 class WorldMap:
     name: str
     bounds: MapBounds
@@ -49,10 +66,16 @@ class WorldMap:
     waypoints: tuple[tuple[str, Point2D], ...]
     default_route: tuple[str, ...]
     obstacles: tuple[MapObstacle, ...]
+    rooms: tuple[MapRoom, ...] = ()
+    schema_version: int = 1
 
     @property
     def waypoint_lookup(self) -> dict[str, Point2D]:
         return dict(self.waypoints)
+
+    @property
+    def room_lookup(self) -> dict[str, MapRoom]:
+        return {room.name: room for room in self.rooms}
 
     def resolve_route(self, names: tuple[str, ...]) -> tuple[tuple[str, Point2D], ...]:
         lookup = self.waypoint_lookup
@@ -60,6 +83,19 @@ class WorldMap:
             return tuple((name, lookup[name]) for name in names)
         except KeyError as error:
             raise WorldMapError(f"Unknown route waypoint: {error.args[0]}") from error
+
+    def resolve_room(self, label: str) -> MapRoom:
+        """Resolve a canonical room name or a configured human-language alias."""
+        requested = label.strip()
+        if not requested:
+            raise WorldMapError("Room name cannot be empty")
+        for room in self.rooms:
+            if room.matches(requested):
+                return room
+        available = ", ".join(room.name for room in self.rooms)
+        raise WorldMapError(
+            f"Unknown room: {requested}. Available rooms: {available or 'none'}"
+        )
 
 
 def _number(value: Any, label: str) -> float:
@@ -85,7 +121,8 @@ def load_world_map(path: str | Path) -> WorldMap:
 
     if not isinstance(payload, dict):
         raise WorldMapError("Map root must be a JSON object")
-    if payload.get("schema_version") != 1:
+    schema_version = payload.get("schema_version")
+    if schema_version not in (1, 2):
         raise WorldMapError("Unsupported map schema_version")
 
     name = payload.get("name")
@@ -169,6 +206,83 @@ def load_world_map(path: str | Path) -> WorldMap:
             )
         )
 
+    room_data = payload.get("rooms", {})
+    if not isinstance(room_data, dict):
+        raise WorldMapError("rooms must be an object")
+    if schema_version == 2 and not room_data:
+        raise WorldMapError("Schema v2 maps need at least one semantic room")
+
+    rooms: list[MapRoom] = []
+    alias_owners: dict[str, str] = {}
+    for raw_name, raw in room_data.items():
+        if not isinstance(raw_name, str) or raw_name != raw_name.strip().upper():
+            raise WorldMapError("Room names must be uppercase without spaces")
+        if raw_name not in lookup:
+            raise WorldMapError(f"Room has no matching waypoint: {raw_name}")
+        if not isinstance(raw, dict):
+            raise WorldMapError(f"Room {raw_name} must be an object")
+
+        display_name = raw.get("display_name", raw_name.title())
+        if not isinstance(display_name, str) or not display_name.strip():
+            raise WorldMapError(f"Room {raw_name} needs a display_name")
+
+        area_values = _vector(raw.get("area"), 4, f"room {raw_name}.area")
+        area = AABB(*area_values)
+        if area.min_x >= area.max_x or area.min_y >= area.max_y:
+            raise WorldMapError(f"Room area is reversed or empty: {raw_name}")
+        if not (
+            bounds.min_x_m <= area.min_x <= area.max_x <= bounds.max_x_m
+            and bounds.min_y_m <= area.min_y <= area.max_y <= bounds.max_y_m
+        ):
+            raise WorldMapError(f"Room area is outside map: {raw_name}")
+
+        inspection_values = _vector(
+            raw.get("inspection_point"),
+            2,
+            f"room {raw_name}.inspection_point",
+        )
+        inspection_point = Point2D(*inspection_values)
+        if not area.contains(inspection_point):
+            raise WorldMapError(f"Inspection point is outside room: {raw_name}")
+        if lookup[raw_name] != inspection_point:
+            raise WorldMapError(
+                f"Room waypoint and inspection_point must match: {raw_name}"
+            )
+
+        inspection_yaw_deg = _number(
+            raw.get("inspection_yaw_deg", 0.0),
+            f"room {raw_name}.inspection_yaw_deg",
+        )
+        if not -180.0 <= inspection_yaw_deg <= 180.0:
+            raise WorldMapError(f"Room yaw must be between -180 and 180: {raw_name}")
+
+        raw_aliases = raw.get("aliases", [])
+        if not isinstance(raw_aliases, list) or not all(
+            isinstance(alias, str) and alias.strip() for alias in raw_aliases
+        ):
+            raise WorldMapError(f"Room aliases must be non-empty strings: {raw_name}")
+        aliases = tuple(alias.strip() for alias in raw_aliases)
+        candidates = (raw_name, display_name, *aliases)
+        for candidate in candidates:
+            normalized = candidate.strip().casefold()
+            owner = alias_owners.get(normalized)
+            if owner is not None and owner != raw_name:
+                raise WorldMapError(
+                    f"Room alias '{candidate}' is shared by {owner} and {raw_name}"
+                )
+            alias_owners[normalized] = raw_name
+
+        rooms.append(
+            MapRoom(
+                name=raw_name,
+                display_name=display_name.strip(),
+                area=area,
+                inspection_point=inspection_point,
+                inspection_yaw_deg=inspection_yaw_deg,
+                aliases=aliases,
+            )
+        )
+
     return WorldMap(
         name=name.strip(),
         bounds=bounds,
@@ -176,4 +290,6 @@ def load_world_map(path: str | Path) -> WorldMap:
         waypoints=tuple(waypoints),
         default_route=default_route,
         obstacles=tuple(obstacles),
+        rooms=tuple(rooms),
+        schema_version=schema_version,
     )

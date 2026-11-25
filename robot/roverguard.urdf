@@ -162,4 +162,70 @@
         <child link="front_sensor"/>
         <origin xyz="0.16 0 0.02"/>
     </joint>
+
+
+    <!-- Camera mast: stays inside the chassis footprint. -->
+    <link name="camera_mast">
+        <inertial>
+            <mass value="0.02"/>
+            <inertia
+                ixx="0.00011" ixy="0" ixz="0"
+                iyy="0.00011" iyz="0"
+                izz="0.000001"/>
+        </inertial>
+
+        <visual>
+            <geometry>
+                <cylinder radius="0.012" length="0.26"/>
+            </geometry>
+            <material name="mast_dark">
+                <color rgba="0.08 0.10 0.14 1"/>
+            </material>
+        </visual>
+
+        <collision>
+            <geometry>
+                <cylinder radius="0.012" length="0.26"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="camera_mast_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="camera_mast"/>
+        <origin xyz="0.08 0 0.17"/>
+    </joint>
+
+    <link name="camera_head">
+        <inertial>
+            <mass value="0.03"/>
+            <inertia
+                ixx="0.0000125" ixy="0" ixz="0"
+                iyy="0.0000250" iyz="0"
+                izz="0.0000325"/>
+        </inertial>
+
+        <visual>
+            <geometry>
+                <box size="0.07 0.05 0.04"/>
+            </geometry>
+            <material name="camera_black">
+                <color rgba="0.03 0.04 0.06 1"/>
+            </material>
+        </visual>
+
+        <collision>
+            <geometry>
+                <box size="0.07 0.05 0.04"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="camera_head_joint" type="continuous">
+        <parent link="base_link"/>
+        <child link="camera_head"/>
+        <origin xyz="0.10 0 0.31"/>
+        <axis xyz="0 0 1"/>
+        <dynamics damping="0.02" friction="0.01"/>
+    </joint>
 </robot>

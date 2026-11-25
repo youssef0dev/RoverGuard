@@ -8,7 +8,7 @@ class PathFollower:
     def __init__(
         self,
         controller: PointController,
-        intermediate_tolerance_m: float = 0.025,
+        intermediate_tolerance_m: float = 0.04,
     ):
         self.controller = controller
         self.intermediate_tolerance_m = intermediate_tolerance_m
